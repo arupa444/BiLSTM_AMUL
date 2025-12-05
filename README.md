@@ -55,16 +55,15 @@ Depending on what you want to do:
   Use the notebook `multiLayer.ipynb` (e.g. open in Jupyter) to run experiments, build and train the BiLSTM model, and observe results.  
 
 - **Run scripts**  
+  For the enpoint calling:  
+  ```bash
+  uvicorn app:app --reload
+  ```
+- **Run scripts**  
   For example, to run inference or test the model:  
   ```bash
   python test.py
   ```
-
-Or if you have a main application script:
-
-```bash
-python app.py
-```
 
 * **Refer documentation**
   For more details on model choices, data requirements, usage instructions — check `how.md` or `modelsWeCanUSe.md`.
