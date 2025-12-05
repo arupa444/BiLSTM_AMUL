@@ -3,5 +3,6 @@ uvicorn
 tensorflow
 numpy
 pydantic
-pickle5
 scikit-learn
+pandas
+matplotlib
