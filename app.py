@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import tensorflow as tf
+from tensorflow.keras.layers import Layer
 from datetime import datetime
 import uvicorn
 
@@ -19,9 +20,9 @@ app = FastAPI(
 )
 
 # Global variables for model and scalers
-model = "models/bilstm_attention_final.h5"
-feature_scaler = "models/feature_scaler.pkl"
-target_scaler = "models/target_scaler.pkl"
+model = None
+feature_scaler = None
+target_scaler = None
 SEQ_LEN = 60
 
 # Feature columns (must match training)
@@ -37,6 +38,50 @@ SKU_MAPPING = {'SKU_A': 0, 'SKU_B': 1, 'SKU_C': 2, 'SKU_D': 3, 'SKU_E': 4}
 
 # Festival dates (update based on your data)
 FESTIVAL_DATES = ['2022-10-15', '2023-10-24', '2024-11-01']
+
+
+# ================================================
+# Custom Attention Layer (same as training script)
+# ================================================
+class AttentionLayer(Layer):
+    """Custom Attention Layer - must match training implementation"""
+    def __init__(self, **kwargs):
+        super(AttentionLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        self.W = self.add_weight(
+            name="att_weight",
+            shape=(input_shape[-1], input_shape[-1]),
+            initializer="random_normal",
+            trainable=True
+        )
+        self.b = self.add_weight(
+            name="att_bias",
+            shape=(input_shape[-1],),
+            initializer="zeros",
+            trainable=True
+        )
+        self.u = self.add_weight(
+            name="att_u",
+            shape=(input_shape[-1], 1),
+            initializer="random_normal",
+            trainable=True
+        )
+        super(AttentionLayer, self).build(input_shape)
+
+    def call(self, inputs):
+        u_it = tf.tanh(tf.tensordot(inputs, self.W, axes=1) + self.b)
+        ait = tf.tensordot(u_it, self.u, axes=1)
+        ait = tf.squeeze(ait, -1)
+        a = tf.nn.softmax(ait)
+        a = tf.expand_dims(a, -1)
+        weighted_input = inputs * a
+        output = tf.reduce_sum(weighted_input, axis=1)
+        return output
+
+    def get_config(self):
+        config = super(AttentionLayer, self).get_config()
+        return config
 
 
 class PredictionInput(BaseModel):
@@ -75,22 +120,31 @@ def load_models():
 
     try:
         # Update these paths to your actual model location
-        model_path = "bilstm_attention_final.h5"
-        feature_scaler_path = "feature_scaler.pkl"
-        target_scaler_path = "target_scaler.pkl"
+        model_path = "models/bilstm_attention_final.h5"
+        feature_scaler_path = "models/feature_scaler.pkl"
+        target_scaler_path = "models/target_scaler.pkl"
 
-        # Load model
-        model = tf.keras.models.load_model(model_path, compile=False)
+        # Load model with custom objects
+        print("Loading model...")
+        custom_objects = {'AttentionLayer': AttentionLayer}
+        model = tf.keras.models.load_model(
+            model_path,
+            custom_objects=custom_objects,
+            compile=False
+        )
         model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+        print("✅ Model loaded successfully!")
 
         # Load scalers
+        print("Loading scalers...")
         with open(feature_scaler_path, 'rb') as f:
             feature_scaler = pickle.load(f)
 
         with open(target_scaler_path, 'rb') as f:
             target_scaler = pickle.load(f)
 
-        print("✅ Model and scalers loaded successfully!")
+        print("✅ Scalers loaded successfully!")
+        print(f"✅ All models loaded successfully!")
 
     except Exception as e:
         print(f"❌ Error loading models: {str(e)}")
