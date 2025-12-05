@@ -1,201 +1,300 @@
-import io
-import uvicorn
+"""
+FastAPI application for BiLSTM sales prediction
+"""
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from typing import List, Optional
 import numpy as np
 import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
-from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel
-from keras.models import load_model
-import joblib
+import pickle
+import tensorflow as tf
+from datetime import datetime
+import uvicorn
 
-# ======================================================
-# CONFIG
-# ======================================================
-API_KEY = "mysecretkey"
+# Initialize FastAPI app
+app = FastAPI(
+    title="BiLSTM Sales Prediction API",
+    description="API for predicting sales using BiLSTM with Attention",
+    version="1.0.0"
+)
 
+# Global variables for model and scalers
+model = "models/bilstm_attention_final.h5"
+feature_scaler = "models/feature_scaler.pkl"
+target_scaler = "models/target_scaler.pkl"
+SEQ_LEN = 60
 
-def verify_key(key: str):
-    if key != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
-    return True
+# Feature columns (must match training)
+FEATURES = [
+    'stock_on_hand', 'intransit_qty', 'pending_po_qty', 'lead_time_days',
+    'sin_doy', 'cos_doy', 'sin_dow', 'cos_dow', 'festival_flag',
+    'branch_enc', 'sku_enc'
+]
 
+# Branch and SKU encoding mappings (you'll need to update these based on your training data)
+BRANCH_MAPPING = {'GC01': 0, 'GC02': 1, 'GC03': 2, 'GC04': 3, 'GC05': 4}
+SKU_MAPPING = {'SKU_A': 0, 'SKU_B': 1, 'SKU_C': 2, 'SKU_D': 3, 'SKU_E': 4}
 
-# ======================================================
-# LOAD ARTIFACTS
-# ======================================================
-MODEL_PATH = "models/bilstm_attention_final.h5"
-FEATURE_SCALER_PATH = "models/feature_scaler.pkl"
-TARGET_SCALER_PATH = "models/target_scaler.pkl"
-
-model = load_model(MODEL_PATH)
-feature_scaler = joblib.load(FEATURE_SCALER_PATH)
-target_scaler = joblib.load(TARGET_SCALER_PATH)
-
-# Detect model input shape
-WINDOW = model.input_shape[1]
-FEATURES = model.input_shape[2]
-
-app = FastAPI(title="Forecasting API", description="LSTM/BiLSTM Forecasting Service")
-
-# ======================================================
-# DB Setup (SQLite)
-# ======================================================
-DB = "predictions.db"
+# Festival dates (update based on your data)
+FESTIVAL_DATES = ['2022-10-15', '2023-10-24', '2024-11-01']
 
 
-def init_db():
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS forecast_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            steps INTEGER,
-            prediction TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
+class PredictionInput(BaseModel):
+    """Input schema for single prediction"""
+    branchcode: str = Field(..., example="GC01")
+    materialcode: str = Field(..., example="SKU_A")
+    stock_on_hand: float = Field(..., example=500.0)
+    intransit_qty: float = Field(..., example=100.0)
+    pending_po_qty: float = Field(..., example=50.0)
+    lead_time_days: int = Field(..., example=7)
+    date: str = Field(..., example="2024-01-15")
 
 
-init_db()
-
-
-def store_prediction(steps, prediction_list):
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO forecast_history (steps, prediction) VALUES (?, ?)",
-        (steps, str(prediction_list))
+class HistoricalDataInput(BaseModel):
+    """Input schema for prediction with historical sequence"""
+    branchcode: str
+    materialcode: str
+    historical_data: List[PredictionInput] = Field(
+        ...,
+        min_items=60,
+        description=f"Must provide exactly {SEQ_LEN} historical data points"
     )
-    conn.commit()
-    conn.close()
 
 
-# ======================================================
-# REQUEST MODELS
-# ======================================================
-class PredictRequest(BaseModel):
-    data: list  # last window of input features
+class PredictionResponse(BaseModel):
+    """Response schema for predictions"""
+    predicted_sales: float
+    branchcode: str
+    materialcode: str
+    prediction_date: str
 
 
-# ======================================================
-# UTILITY FUNCTIONS
-# ======================================================
-def predict_single_step(input_data):
-    arr = np.array(input_data).reshape(1, WINDOW, FEATURES)
-    arr_scaled = feature_scaler.transform(arr.reshape(-1, FEATURES)).reshape(1, WINDOW, FEATURES)
-    pred = model.predict(arr_scaled)
-    return float(target_scaler.inverse_transform(pred)[0][0])
+def load_models():
+    """Load the trained model and scalers"""
+    global model, feature_scaler, target_scaler
+
+    try:
+        # Update these paths to your actual model location
+        model_path = "bilstm_attention_final.h5"
+        feature_scaler_path = "feature_scaler.pkl"
+        target_scaler_path = "target_scaler.pkl"
+
+        # Load model
+        model = tf.keras.models.load_model(model_path, compile=False)
+        model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+
+        # Load scalers
+        with open(feature_scaler_path, 'rb') as f:
+            feature_scaler = pickle.load(f)
+
+        with open(target_scaler_path, 'rb') as f:
+            target_scaler = pickle.load(f)
+
+        print("✅ Model and scalers loaded successfully!")
+
+    except Exception as e:
+        print(f"❌ Error loading models: {str(e)}")
+        raise
 
 
-def multi_step_forecast(input_data, n_steps):
-    results = []
-    window = np.array(input_data).reshape(1, WINDOW, FEATURES)
+def is_festival_period(date_str: str, window: int = 7) -> int:
+    """Check if date is within festival period"""
+    date = pd.to_datetime(date_str)
+    festivals = [pd.to_datetime(d) for d in FESTIVAL_DATES]
 
-    for _ in range(n_steps):
-        scaled = feature_scaler.transform(window.reshape(-1, FEATURES)).reshape(1, WINDOW, FEATURES)
-        pred = model.predict(scaled)
-        inv = target_scaler.inverse_transform(pred)[0][0]
-        results.append(float(inv))
-
-        # Update window (recursive)
-        next_input = np.zeros((1, 1, FEATURES))
-        next_input[0, 0, 0] = pred
-        window = np.append(window[:, 1:, :], next_input, axis=1)
-
-    return results
+    for f in festivals:
+        if abs((date - f).days) <= window:
+            return 1
+    return 0
 
 
-# ======================================================
-# ENDPOINT 1: Single Step Prediction
-# ======================================================
-@app.post("/predict")
-def predict(req: PredictRequest, valid=Depends(verify_key)):
-    if len(req.data) != WINDOW:
-        raise HTTPException(400, f"Expected window size {WINDOW}, got {len(req.data)}")
-    pred = predict_single_step(req.data)
-    store_prediction(1, [pred])
-    return {"prediction": pred}
+def create_cyclical_features(date_str: str) -> dict:
+    """Create cyclical date features"""
+    date = pd.to_datetime(date_str)
+    day_of_year = date.dayofyear
+    weekday = date.weekday()
+
+    return {
+        'sin_doy': np.sin(2 * np.pi * day_of_year / 365.25),
+        'cos_doy': np.cos(2 * np.pi * day_of_year / 365.25),
+        'sin_dow': np.sin(2 * np.pi * weekday / 7),
+        'cos_dow': np.cos(2 * np.pi * weekday / 7)
+    }
 
 
-# ======================================================
-# ENDPOINT 2: Predict N Steps
-# ======================================================
-@app.get("/predict_n")
-def predict_n(steps: int, key: str = Depends(verify_key)):
-    raise HTTPException(400, "Provide 'data' in body using POST /predict_n_body instead.")
+def preprocess_single_input(input_data: PredictionInput) -> dict:
+    """Preprocess single input data point"""
+    # Encode branch and SKU
+    if input_data.branchcode not in BRANCH_MAPPING:
+        raise ValueError(f"Unknown branch code: {input_data.branchcode}")
+    if input_data.materialcode not in SKU_MAPPING:
+        raise ValueError(f"Unknown material code: {input_data.materialcode}")
+
+    branch_enc = BRANCH_MAPPING[input_data.branchcode]
+    sku_enc = SKU_MAPPING[input_data.materialcode]
+
+    # Create cyclical features
+    cyclical = create_cyclical_features(input_data.date)
+
+    # Festival flag
+    festival_flag = is_festival_period(input_data.date)
+
+    # Combine all features
+    features = {
+        'stock_on_hand': input_data.stock_on_hand,
+        'intransit_qty': input_data.intransit_qty,
+        'pending_po_qty': input_data.pending_po_qty,
+        'lead_time_days': input_data.lead_time_days,
+        'sin_doy': cyclical['sin_doy'],
+        'cos_doy': cyclical['cos_doy'],
+        'sin_dow': cyclical['sin_dow'],
+        'cos_dow': cyclical['cos_dow'],
+        'festival_flag': festival_flag,
+        'branch_enc': branch_enc,
+        'sku_enc': sku_enc
+    }
+
+    return features
 
 
-@app.post("/predict_n_body")
-def predict_n_body(req: PredictRequest, steps: int = 10, valid=Depends(verify_key)):
-    preds = multi_step_forecast(req.data, steps)
-    store_prediction(steps, preds)
-    return {"steps": steps, "forecast": preds}
+def create_sequence(data_points: List[dict]) -> np.ndarray:
+    """Create sequence array from list of feature dictionaries"""
+    # Convert to DataFrame
+    df = pd.DataFrame(data_points)
+
+    # Ensure correct order of features
+    df = df[FEATURES]
+
+    # Scale features
+    scaled_features = feature_scaler.transform(df)
+
+    # Reshape for LSTM input: (1, SEQ_LEN, n_features)
+    sequence = scaled_features.reshape(1, SEQ_LEN, len(FEATURES))
+
+    return sequence
 
 
-# ======================================================
-# ENDPOINT 3: 7-Day Forecast
-# ======================================================
-@app.post("/predict_7_days")
-def predict_7days(req: PredictRequest, valid=Depends(verify_key)):
-    preds = multi_step_forecast(req.data, 7)
-    store_prediction(7, preds)
-    return {"7_day_forecast": preds}
+@app.on_event("startup")
+async def startup_event():
+    """Load models on startup"""
+    load_models()
 
 
-# ======================================================
-# ENDPOINT 4: Predict From CSV Upload
-# ======================================================
-@app.post("/predict_from_csv")
-def predict_from_csv(file: UploadFile = File(...), steps: int = 7, key: str = Depends(verify_key)):
-    df = pd.read_csv(file.file)
-
-    if df.shape[0] < WINDOW:
-        raise HTTPException(400, f"CSV must contain at least {WINDOW} rows")
-
-    last_window = df.tail(WINDOW).values.tolist()
-    preds = multi_step_forecast(last_window, steps)
-
-    store_prediction(steps, preds)
-    return {"forecast": preds}
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "BiLSTM Sales Prediction API",
+        "status": "active",
+        "model_loaded": model is not None
+    }
 
 
-# ======================================================
-# ENDPOINT 5: Plot Forecast
-# ======================================================
-@app.post("/plot_forecast")
-def plot_forecast(req: PredictRequest, steps: int = 30, key: str = Depends(verify_key)):
-    preds = multi_step_forecast(req.data, steps)
-
-    plt.figure(figsize=(10, 5))
-    plt.plot(preds, label="Forecast")
-    plt.legend()
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png")
-    buf.seek(0)
-
-    return StreamingResponse(buf, media_type="image/png")
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "model_loaded": model is not None,
+        "scalers_loaded": feature_scaler is not None and target_scaler is not None
+    }
 
 
-# ======================================================
-# ENDPOINT 6: View Prediction History
-# ======================================================
-@app.get("/history")
-def history(key: str = Depends(verify_key)):
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM forecast_history ORDER BY id DESC LIMIT 50")
-    rows = cursor.fetchall()
-    conn.close()
-    return {"history": rows}
+@app.post("/predict", response_model=PredictionResponse)
+async def predict_sales(input_data: HistoricalDataInput):
+    """
+    Predict sales based on historical sequence data
+
+    Requires exactly 60 historical data points for the sequence
+    """
+    if model is None or feature_scaler is None or target_scaler is None:
+        raise HTTPException(status_code=503, detail="Models not loaded")
+
+    try:
+        # Check if we have exactly SEQ_LEN data points
+        if len(input_data.historical_data) != SEQ_LEN:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Expected {SEQ_LEN} historical data points, got {len(input_data.historical_data)}"
+            )
+
+        # Preprocess all historical data points
+        processed_data = []
+        for data_point in input_data.historical_data:
+            features = preprocess_single_input(data_point)
+            processed_data.append(features)
+
+        # Create sequence
+        sequence = create_sequence(processed_data)
+
+        # Make prediction
+        prediction_scaled = model.predict(sequence, verbose=0)
+
+        # Inverse transform prediction
+        prediction = target_scaler.inverse_transform(prediction_scaled)[0, 0]
+
+        # Ensure non-negative prediction
+        prediction = max(0, prediction)
+
+        return PredictionResponse(
+            predicted_sales=float(prediction),
+            branchcode=input_data.branchcode,
+            materialcode=input_data.materialcode,
+            prediction_date=input_data.historical_data[-1].date
+        )
+
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 
-# ======================================================
-# START SERVER
-# ======================================================
+@app.post("/predict_batch")
+async def predict_batch(inputs: List[HistoricalDataInput]):
+    """
+    Batch prediction endpoint
+    """
+    if model is None or feature_scaler is None or target_scaler is None:
+        raise HTTPException(status_code=503, detail="Models not loaded")
+
+    predictions = []
+
+    for input_data in inputs:
+        try:
+            result = await predict_sales(input_data)
+            predictions.append(result)
+        except Exception as e:
+            predictions.append({
+                "error": str(e),
+                "branchcode": input_data.branchcode,
+                "materialcode": input_data.materialcode
+            })
+
+    return {"predictions": predictions}
+
+
+@app.get("/model_info")
+async def model_info():
+    """Get information about the loaded model"""
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+
+    return {
+        "sequence_length": SEQ_LEN,
+        "features": FEATURES,
+        "n_features": len(FEATURES),
+        "branches": list(BRANCH_MAPPING.keys()),
+        "skus": list(SKU_MAPPING.keys()),
+        "model_layers": len(model.layers),
+        "model_parameters": model.count_params()
+    }
+
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+    # Run the FastAPI app
+    uvicorn.run(
+        "main:app",  # Change "main" to your filename if different
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
