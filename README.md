@@ -69,7 +69,7 @@ Depending on what you want to do:
   For more details on model choices, data requirements, usage instructions — check `how.md` or `modelsWeCanUSe.md`.
 
 - **Run this json in swaggerUI**  
-  For example, to run inference or test the model:  
+  For example, to run inference or test the model:  ("/predict")
   ```bash
       {
       "branchcode": "GC01",
@@ -137,6 +137,145 @@ Depending on what you want to do:
         {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 245, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-29"}
       ]
     }
+  ```
+
+- **Run this json in swaggerUI for batch prediction**  
+  For example, to run inference or test the model:  ("/predict_batch")
+  ```bash
+      [
+          {
+            "branchcode": "GC01",
+            "materialcode": "SKU_A",
+            "historical_data": [
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 500, "intransit_qty": 50, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-01"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 495, "intransit_qty": 50, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-02"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 490, "intransit_qty": 50, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-03"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 480, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-04"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 475, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-05"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 470, "intransit_qty": 0, "pending_po_qty": 50, "lead_time_days": 7, "date": "2024-01-06"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 460, "intransit_qty": 0, "pending_po_qty": 50, "lead_time_days": 7, "date": "2024-01-07"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 450, "intransit_qty": 0, "pending_po_qty": 50, "lead_time_days": 7, "date": "2024-01-08"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 445, "intransit_qty": 0, "pending_po_qty": 50, "lead_time_days": 7, "date": "2024-01-09"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 440, "intransit_qty": 0, "pending_po_qty": 50, "lead_time_days": 7, "date": "2024-01-10"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 435, "intransit_qty": 0, "pending_po_qty": 50, "lead_time_days": 7, "date": "2024-01-11"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 430, "intransit_qty": 50, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-12"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 480, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-13"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 475, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-14"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 470, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-15"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 465, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-16"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 460, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-17"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 455, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-18"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 450, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-19"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 445, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-20"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 440, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-21"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 435, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-22"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 430, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-23"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 425, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-24"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 420, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-25"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 415, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-26"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 410, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-27"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 405, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-28"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 400, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-29"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 395, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-30"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 390, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-01-31"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 385, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-01"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 380, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-02"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 375, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-03"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 370, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-04"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 365, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-05"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 360, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-06"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 355, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-07"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 350, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-08"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 345, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-09"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 340, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-10"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 335, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-11"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 330, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-12"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 325, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-13"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 320, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-14"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 315, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-15"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 310, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-16"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 305, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-17"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 300, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-18"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 295, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-19"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 290, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-20"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 285, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-21"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 280, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-22"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 275, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-23"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 270, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-24"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 265, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-25"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 260, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-26"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 255, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-27"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 250, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-28"},
+              {"branchcode": "GC01", "materialcode": "SKU_A", "stock_on_hand": 245, "intransit_qty": 0, "pending_po_qty": 0, "lead_time_days": 7, "date": "2024-02-29"}
+            ]
+          },
+          {
+            "branchcode": "GC02",
+            "materialcode": "SKU_B",
+            "historical_data": [
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 800, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-01"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 790, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-02"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 780, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-03"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 770, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-04"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 760, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-05"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 750, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-06"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 740, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-07"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 730, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-08"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 720, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-09"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 710, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-10"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 700, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-11"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 690, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-12"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 680, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-13"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 670, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-14"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 660, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-15"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 650, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-16"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 640, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-17"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 630, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-18"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 620, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-19"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 610, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-20"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 600, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-21"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 590, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-22"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 580, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-23"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 570, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-24"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 560, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-25"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 550, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-26"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 540, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-27"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 530, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-28"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 520, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-29"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 510, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-30"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 500, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-01-31"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 490, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-01"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 480, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-02"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 470, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-03"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 460, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-04"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 450, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-05"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 440, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-06"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 430, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-07"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 420, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-08"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 410, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-09"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 400, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-10"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 390, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-11"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 380, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-12"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 370, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-13"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 360, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-14"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 350, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-15"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 340, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-16"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 330, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-17"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 320, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-18"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 310, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-19"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 300, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-20"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 290, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-21"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 280, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-22"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 270, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-23"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 260, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-24"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 250, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-25"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 240, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-26"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 230, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-27"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 220, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-28"},
+              {"branchcode": "GC02", "materialcode": "SKU_B", "stock_on_hand": 210, "intransit_qty": 0, "pending_po_qty": 10, "lead_time_days": 10, "date": "2024-02-29"}
+            ]
+          }
+        ]
   ```
 
 ## 🧠 What is BiLSTM (and why use it)
