@@ -72,9 +72,9 @@ Depending on what you want to do:
 
 ## 🧠 What is BiLSTM (and why use it)
 
-BiLSTM stands for **Bidirectional Long Short-Term Memory** — a type of recurrent neural network architecture that processes sequences in both forward and backward directions, thereby capturing context from the past and future simultaneously. ([GitHub][1])
+BiLSTM stands for **Bidirectional Long Short-Term Memory** — a type of recurrent neural network architecture that processes sequences in both forward and backward directions, thereby capturing context from the past and future simultaneously.
 
-This makes BiLSTM especially useful for tasks involving sequential data (e.g. text, time-series, etc.) — as it can learn dependencies from both previous and upcoming elements in a sequence. ([GitHub][2])
+This makes BiLSTM especially useful for tasks involving sequential data (e.g. text, time-series, etc.) — as it can learn dependencies from both previous and upcoming elements in a sequence.
 
 ## ✅ Features / What’s included
 
